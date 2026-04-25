@@ -98,6 +98,33 @@ func TestUpdateLocalPath(t *testing.T) {
 	}
 }
 
+func TestUpdateFieldFrameworksAndMonorepo(t *testing.T) {
+	store := NewStore("")
+	store.SetRepositories([]RepoEntry{
+		{Provider: "github", Project: "acme", Name: "web"},
+	})
+
+	store.UpdateField("github", "acme", "web", "frameworks", "Next.js, React")
+	store.UpdateField("github", "acme", "web", "is_monorepo", "true")
+
+	entry := store.FindByName("github", "acme", "web")
+	if entry == nil {
+		t.Fatal("expected entry")
+	}
+	if len(entry.Frameworks) != 2 || entry.Frameworks[0] != "Next.js" {
+		t.Errorf("expected [Next.js, React], got %v", entry.Frameworks)
+	}
+	if !entry.IsMonorepo {
+		t.Error("expected IsMonorepo=true")
+	}
+
+	// Toggle off
+	store.UpdateField("github", "acme", "web", "is_monorepo", "false")
+	if store.FindByName("github", "acme", "web").IsMonorepo {
+		t.Error("expected IsMonorepo=false after update")
+	}
+}
+
 func TestFindByNameNotFound(t *testing.T) {
 	store := NewStore("")
 	store.SetRepositories([]RepoEntry{})

@@ -20,8 +20,10 @@ type RepoEntry struct {
 	CloneURL       string    `json:"clone_url"`
 	Description    string    `json:"description"`
 	Languages      []string  `json:"languages"`
+	Frameworks     []string  `json:"frameworks,omitempty"`
 	Domain         string    `json:"domain"`
 	IntegratesWith []string  `json:"integrates_with,omitempty"`
+	IsMonorepo     bool      `json:"is_monorepo,omitempty"`
 	LocalPath      string    `json:"local_path"`
 	LastSynced     time.Time `json:"last_synced"`
 }
@@ -133,6 +135,10 @@ func (s *Store) UpdateField(provider, project, repo, field, value string) {
 				r.LocalPath = value
 			case "languages":
 				r.Languages = splitAndTrim(value)
+			case "frameworks":
+				r.Frameworks = splitAndTrim(value)
+			case "is_monorepo":
+				r.IsMonorepo = parseBoolValue(value)
 			}
 			return
 		}

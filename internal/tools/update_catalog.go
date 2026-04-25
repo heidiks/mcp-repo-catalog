@@ -14,12 +14,14 @@ var allowedFields = map[string]bool{
 	"description": true,
 	"local_path":  true,
 	"languages":   true,
+	"frameworks":  true,
+	"is_monorepo": true,
 }
 
 type UpdateCatalogInput struct {
 	Repo  string `json:"repo" jsonschema:"required,Repository name (or partial match)"`
-	Field string `json:"field" jsonschema:"required,Field to update: domain, description, local_path, or languages"`
-	Value string `json:"value" jsonschema:"required,New value for the field. For languages use comma-separated values"`
+	Field string `json:"field" jsonschema:"required,Field to update: domain, description, local_path, languages, frameworks, or is_monorepo"`
+	Value string `json:"value" jsonschema:"required,New value. For languages/frameworks use comma-separated values; for is_monorepo use true/false"`
 }
 
 func RegisterUpdateCatalog(server *mcp.Server, store *catalog.Store) {
@@ -65,16 +67,7 @@ func RegisterUpdateCatalog(server *mcp.Server, store *catalog.Store) {
 		}
 
 		// Apply update
-		switch field {
-		case "domain":
-			store.UpdateField(target.Provider, target.Project, target.Name, "domain", input.Value)
-		case "description":
-			store.UpdateField(target.Provider, target.Project, target.Name, "description", input.Value)
-		case "local_path":
-			store.UpdateField(target.Provider, target.Project, target.Name, "local_path", input.Value)
-		case "languages":
-			store.UpdateField(target.Provider, target.Project, target.Name, "languages", input.Value)
-		}
+		store.UpdateField(target.Provider, target.Project, target.Name, field, input.Value)
 
 		if err := store.Save(); err != nil {
 			return nil, nil, fmt.Errorf("save catalog: %w", err)

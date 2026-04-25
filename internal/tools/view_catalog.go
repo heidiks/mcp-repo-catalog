@@ -68,6 +68,12 @@ func RegisterViewCatalog(server *mcp.Server, store *catalog.Store) {
 				if len(e.Languages) > 0 {
 					tags = append(tags, strings.Join(e.Languages, ", "))
 				}
+				if len(e.Frameworks) > 0 {
+					tags = append(tags, strings.Join(e.Frameworks, ", "))
+				}
+				if e.IsMonorepo {
+					tags = append(tags, "monorepo")
+				}
 				if len(tags) > 0 {
 					fmt.Fprintf(&sb, " [%s]", strings.Join(tags, " | "))
 				}
