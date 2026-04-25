@@ -2,7 +2,68 @@
 
 MCP server for discovering and exploring repositories across multiple git platforms. Supports **Azure DevOps** and **GitHub** simultaneously, with results aggregated from all configured providers.
 
-Complements the [official Microsoft Azure DevOps MCP](https://github.com/microsoft/azure-devops-mcp) (which handles operations like PRs, work items, pipelines) by focusing on **discovery, local repo mapping, and architectural context**.
+## Architecture
+
+```mermaid
+flowchart LR
+    Client["MCP Client<br/>(e.g. Claude Code)"]
+
+    subgraph Server["mcp-repo-catalog (stdio)"]
+        Tools["Tool handlers<br/>list, search, view,<br/>read, clone, sync, ..."]
+        Registry["Provider Registry"]
+        Cache[("In-memory cache<br/>TTL 5 min")]
+        Store[("Catalog store<br/>~/.config/.../catalog.json")]
+        Locator["Local repo locator"]
+    end
+
+    subgraph Providers["Provider implementations"]
+        ADO["Azure DevOps<br/>REST v7.1"]
+        GH["GitHub<br/>REST v3"]
+    end
+
+    subgraph External["External / filesystem"]
+        ADOAPI[("dev.azure.com")]
+        GHAPI[("api.github.com")]
+        LocalRepos[("Local clones<br/>$AZURE_DEVOPS_REPOS_PATH<br/>$GITHUB_REPOS_PATH")]
+        RemoteCat[("Optional remote catalog<br/>$CATALOG_REMOTE_REPO")]
+    end
+
+    Client <-->|JSON-RPC| Tools
+    Tools --> Registry
+    Tools --> Cache
+    Tools --> Store
+    Tools --> Locator
+
+    Registry --> ADO
+    Registry --> GH
+    ADO --> ADOAPI
+    GH --> GHAPI
+    Locator --> LocalRepos
+    Store -.->|sync_remote| RemoteCat
+```
+
+### Request flow (example: `read_from_repo`)
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant H as read_from_repo handler
+    participant S as Catalog store
+    participant L as Local FS
+    participant P as Provider API
+
+    C->>H: {repo, path}
+    H->>S: Search(repo)
+    S-->>H: matched entry
+    alt entry has LocalPath
+        H->>L: read file from clone
+        L-->>H: content (source: local)
+    else not cloned
+        H->>P: GetFileContent(project, repo, path)
+        P-->>H: content (source: api)
+    end
+    H-->>C: file content + source
+```
 
 ## Tools
 
