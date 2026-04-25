@@ -1,0 +1,11 @@
+{
+  "name": "mcp-repo-catalog",
+  "description": "Multi-provider repository catalog (Azure DevOps + GitHub) exposed as MCP tools, plus a companion skill that auto-enriches catalog entries with frameworks, monorepo flags, and architectural context.",
+  "version": "0.1.0",
+  "author": {
+    "name": "heidiks"
+  },
+  "homepage": "https://github.com/heidiks/mcp-repo-catalog",
+  "repository": "https://github.com/heidiks/mcp-repo-catalog",
+  "license": "MIT"
+}
