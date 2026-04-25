@@ -1,0 +1,13 @@
+{
+  "name": "mcp-repo-catalog",
+  "owner": {
+    "name": "heidiks"
+  },
+  "plugins": [
+    {
+      "name": "mcp-repo-catalog",
+      "source": ".",
+      "description": "Multi-provider repository catalog MCP server + enrich-catalog skill."
+    }
+  ]
+}

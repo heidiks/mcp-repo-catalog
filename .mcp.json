@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "repo-catalog": {
+      "command": "mcp-repo-catalog",
+      "env": {
+        "AZURE_DEVOPS_ORG": "${AZURE_DEVOPS_ORG}",
+        "AZURE_DEVOPS_TOKEN": "${AZURE_DEVOPS_TOKEN}",
+        "AZURE_DEVOPS_REPOS_PATH": "${AZURE_DEVOPS_REPOS_PATH}",
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+        "GITHUB_ORGS": "${GITHUB_ORGS}",
+        "GITHUB_USER": "${GITHUB_USER}",
+        "GITHUB_REPOS_PATH": "${GITHUB_REPOS_PATH}",
+        "DISABLED_PROVIDERS": "${DISABLED_PROVIDERS}",
+        "CATALOG_REMOTE_REPO": "${CATALOG_REMOTE_REPO}",
+        "CATALOG_REMOTE_PATH": "${CATALOG_REMOTE_PATH}"
+      }
+    }
+  }
+}

@@ -90,6 +90,49 @@ The mode is determined by the `CATALOG_REMOTE_REPO` env var: when set, the serve
 
 ## Installation
 
+This repository ships in two layers: the **MCP server** (a Go binary) and a **Claude Code plugin** that bundles the server registration plus the [`enrich-catalog` skill](#workflow-catalog-enrichment). You can install either independently.
+
+### Option 1 — Plugin (recommended for Claude Code users)
+
+The plugin gives you the MCP server registration and the `enrich-catalog` skill in one install. You still need the binary on your `$PATH` (the plugin doesn't ship multi-platform binaries — see "Why no bundled binary" below).
+
+**Step 1. Install the binary.**
+
+```bash
+go install github.com/heidiks/mcp-repo-catalog/cmd@latest
+# or download a pre-built binary from https://github.com/heidiks/mcp-repo-catalog/releases
+# and move it into a directory on $PATH (e.g. /usr/local/bin/)
+```
+
+Verify: `mcp-repo-catalog --version` should print the version.
+
+**Step 2. Add the marketplace and install the plugin.**
+
+In Claude Code:
+
+```
+/plugin marketplace add heidiks/mcp-repo-catalog
+/plugin install mcp-repo-catalog@mcp-repo-catalog
+```
+
+**Step 3. Set the credentials in your shell** (the plugin's `.mcp.json` reads them from environment variables):
+
+```bash
+# ~/.zshrc or ~/.bashrc
+export AZURE_DEVOPS_ORG=your-org
+export AZURE_DEVOPS_TOKEN=...
+export GITHUB_TOKEN=...
+# optional
+export AZURE_DEVOPS_REPOS_PATH=~/path/to/azure/repos
+export GITHUB_REPOS_PATH=~/path/to/github/repos
+```
+
+**Why no bundled binary**: shipping pre-compiled binaries for linux/darwin/windows × amd64/arm64 inside the plugin would inflate the repo by ~40 MB per release and couple binary updates to the plugin release cadence. Goreleaser already publishes clean per-platform binaries via GitHub Releases, so the plugin defers to your `$PATH`. This is the same pattern used by language server plugins.
+
+### Option 2 — Standalone MCP server (no plugin)
+
+If you don't use Claude Code or want to register the MCP yourself:
+
 ```bash
 go install github.com/heidiks/mcp-repo-catalog/cmd@latest
 ```
@@ -101,6 +144,20 @@ git clone https://github.com/heidiks/mcp-repo-catalog
 cd mcp-repo-catalog
 make build   # binary at bin/mcp-repo-catalog
 ```
+
+Then register manually with your MCP client (see [Claude Code](#claude-code) example below).
+
+## Workflow: catalog enrichment
+
+The plugin includes an `enrich-catalog` skill that turns dry catalog entries into rich documentation. Trigger it with phrases like *"enrich the catalog"* or *"document the repos"* and Claude Code will:
+
+1. Call `view_catalog` and identify entries with empty fields.
+2. Use `read_from_repo` to read `README.md`, `CLAUDE.md`, and dependency manifests (`go.mod`, `package.json`, `pom.xml`, etc.).
+3. Detect monorepo signals (`go.work`, workspaces, `[workspace]`, multi-module Maven/Gradle).
+4. Extract frameworks (Spring Boot, Next.js, Gin, FastAPI, ...) from the manifests, ignoring transitive deps.
+5. Update entries via `update_catalog_entry` (or the upstream `.md` in remote mode).
+
+The skill is generic — see `skills/enrich-catalog/SKILL.md` for the full ruleset and a "Customizing for your organization" section if you want to override domain tables, languages, or framework lists.
 
 ## Configuration
 
