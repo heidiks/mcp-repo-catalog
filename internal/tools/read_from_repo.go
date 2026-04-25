@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/heidiks/mcp-repo-catalog/internal/catalog"
+	"github.com/heidiks/mcp-repo-catalog/internal/provider"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -16,10 +17,10 @@ type ReadFromRepoInput struct {
 	Path string `json:"path" jsonschema:"required,File path within the repository (e.g. internal/handlers/auth.go)"`
 }
 
-func RegisterReadFromRepo(server *mcp.Server, store *catalog.Store) {
+func RegisterReadFromRepo(server *mcp.Server, store *catalog.Store, registry *provider.Registry) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "read_from_repo",
-		Description: "Read a file from any cataloged repository using its local clone. Useful for cross-repo context when working on integrations.",
+		Description: "Read a file from any cataloged repository. Uses the local clone when available; falls back to the provider API otherwise.",
 	}, func(ctx context.Context, req *mcp.CallToolRequest, input ReadFromRepoInput) (*mcp.CallToolResult, any, error) {
 		// Find repo in catalog
 		matches := store.Search(input.Repo)
@@ -53,22 +54,41 @@ func RegisterReadFromRepo(server *mcp.Server, store *catalog.Store) {
 			}
 		}
 
-		if target.LocalPath == "" {
-			return nil, nil, fmt.Errorf("repository %q is not cloned locally. Use clone_repository to clone it first", target.Name)
-		}
+		var content string
+		var source string
 
-		filePath := filepath.Join(target.LocalPath, strings.TrimPrefix(input.Path, "/"))
-
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil, nil, fmt.Errorf("file not found: %s in %s", input.Path, target.Name)
+		if target.LocalPath != "" {
+			filePath := filepath.Join(target.LocalPath, strings.TrimPrefix(input.Path, "/"))
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return nil, nil, fmt.Errorf("file not found: %s in %s", input.Path, target.Name)
+				}
+				return nil, nil, fmt.Errorf("read file: %w", err)
 			}
-			return nil, nil, fmt.Errorf("read file: %w", err)
+			content = string(data)
+			source = "local"
+		} else {
+			if registry == nil {
+				return nil, nil, fmt.Errorf("repository %q is not cloned locally. Use clone_repository to clone it first", target.Name)
+			}
+			p := registry.GetByName(target.Provider)
+			if p == nil {
+				return nil, nil, fmt.Errorf("provider %q not registered, cannot fall back to API", target.Provider)
+			}
+			fc, err := p.GetFileContent(ctx, target.Project, target.Name, input.Path)
+			if err != nil {
+				return nil, nil, fmt.Errorf("read file via %s API: %w", target.Provider, err)
+			}
+			if fc.IsFolder {
+				return nil, nil, fmt.Errorf("path %q is a folder, not a file", input.Path)
+			}
+			content = fc.Content
+			source = "api"
 		}
 
-		header := fmt.Sprintf("## %s:%s [%s/%s]\n\n", target.Name, input.Path, target.Provider, target.Project)
-		text := header + string(content)
+		header := fmt.Sprintf("## %s:%s [%s/%s] (source: %s)\n\n", target.Name, input.Path, target.Provider, target.Project, source)
+		text := header + content
 
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: text}}}, nil, nil
 	})
