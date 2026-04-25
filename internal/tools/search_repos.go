@@ -57,6 +57,25 @@ func RegisterSearchRepos(server *mcp.Server, registry *provider.Registry, c *cac
 			}
 		}
 
+		// Fuzzy fallback when no substring match
+		if len(matches) == 0 && len(query) >= 3 {
+			threshold := fuzzyThreshold(len(query))
+			for _, r := range allRepos {
+				name := strings.ToLower(r.Name)
+				if levenshtein(name, query) <= threshold {
+					matches = append(matches, r)
+					continue
+				}
+				// also tolerate fuzzy match against any token of the name (split by - or _)
+				for _, token := range splitNameTokens(name) {
+					if levenshtein(token, query) <= threshold {
+						matches = append(matches, r)
+						break
+					}
+				}
+			}
+		}
+
 		var sb strings.Builder
 		fmt.Fprintf(&sb, "Found %d repositories matching '%s':\n\n", len(matches), input.Query)
 

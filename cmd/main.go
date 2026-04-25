@@ -20,6 +20,13 @@ import (
 var version = "dev"
 
 func main() {
+	for _, arg := range os.Args[1:] {
+		if arg == "--version" || arg == "-v" {
+			fmt.Println(version)
+			return
+		}
+	}
+
 	disabled := parseList(os.Getenv("DISABLED_PROVIDERS"))
 	var providers []provider.Provider
 	repoPaths := make(map[string]string)
@@ -86,7 +93,7 @@ func main() {
 	tools.RegisterSearchRepos(server, registry, c, loc)
 	tools.RegisterRepoDetails(server, registry, c, loc)
 	tools.RegisterViewCatalog(server, store)
-	tools.RegisterReadFromRepo(server, store)
+	tools.RegisterReadFromRepo(server, store, registry)
 	tools.RegisterCloneRepo(server, registry, store, loc)
 
 	if isRemoteMode {
