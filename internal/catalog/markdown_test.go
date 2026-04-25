@@ -55,6 +55,36 @@ Monorepo principal com 15+ microservices Go.
 	}
 }
 
+func TestParseMarkdownFileFrameworksAndMonorepo(t *testing.T) {
+	tmp := t.TempDir()
+	content := `---
+name: web-app
+provider: github
+project: acme
+domain: frontend
+languages: [TypeScript]
+frameworks: [Next.js, React]
+is_monorepo: true
+---
+
+App principal.
+`
+	path := filepath.Join(tmp, "web-app.md")
+	_ = os.WriteFile(path, []byte(content), 0o644)
+
+	entry, err := parseMarkdownFile(path)
+	if err != nil {
+		t.Fatalf("parse failed: %v", err)
+	}
+
+	if len(entry.Frameworks) != 2 || entry.Frameworks[0] != "Next.js" {
+		t.Errorf("expected [Next.js, React], got %v", entry.Frameworks)
+	}
+	if !entry.IsMonorepo {
+		t.Error("expected IsMonorepo=true")
+	}
+}
+
 func TestParseMarkdownFileNameFromFilename(t *testing.T) {
 	tmp := t.TempDir()
 	content := `---

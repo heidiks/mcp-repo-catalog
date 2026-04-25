@@ -17,7 +17,9 @@ type markdownFrontmatter struct {
 	CloneURL       string   `yaml:"clone_url"`
 	Domain         string   `yaml:"domain"`
 	Languages      []string `yaml:"languages"`
+	Frameworks     []string `yaml:"frameworks"`
 	IntegratesWith []string `yaml:"integrates_with"`
+	IsMonorepo     bool     `yaml:"is_monorepo"`
 }
 
 // ParseMarkdownCatalog reads a directory of .md files with YAML frontmatter
@@ -77,8 +79,10 @@ func parseMarkdownFile(path string) (*RepoEntry, error) {
 		CloneURL:       meta.CloneURL,
 		Description:    strings.TrimSpace(body),
 		Languages:      meta.Languages,
+		Frameworks:     meta.Frameworks,
 		Domain:         meta.Domain,
 		IntegratesWith: meta.IntegratesWith,
+		IsMonorepo:     meta.IsMonorepo,
 	}, nil
 }
 
