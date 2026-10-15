@@ -100,6 +100,8 @@ The plugin gives you the MCP server registration and the `enrich-catalog` skill 
 
 ```bash
 go install github.com/heidiks/mcp-repo-catalog/cmd@latest
+# go install names the binary after the package dir (cmd), so rename it
+bin="$(go env GOBIN)"; bin="${bin:-$(go env GOPATH)/bin}"; mv "$bin/cmd" "$bin/mcp-repo-catalog"
 # or download a pre-built binary from https://github.com/heidiks/mcp-repo-catalog/releases
 # and move it into a directory on $PATH (e.g. /usr/local/bin/)
 ```
@@ -135,6 +137,8 @@ If you don't use Claude Code or want to register the MCP yourself:
 
 ```bash
 go install github.com/heidiks/mcp-repo-catalog/cmd@latest
+# go install names the binary after the package dir (cmd), so rename it
+bin="$(go env GOBIN)"; bin="${bin:-$(go env GOPATH)/bin}"; mv "$bin/cmd" "$bin/mcp-repo-catalog"
 ```
 
 Or build from source:
