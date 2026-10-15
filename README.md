@@ -108,14 +108,16 @@ bin="$(go env GOBIN)"; bin="${bin:-$(go env GOPATH)/bin}"; mv "$bin/cmd" "$bin/m
 
 Verify: `mcp-repo-catalog --version` should print the version.
 
-**Step 2. Add the marketplace and install the plugin.**
+**Step 2. Add the marketplace and install the plugin.** The plugin is listed in the [agent-kit](https://github.com/heidiks/agent-kit) marketplace.
 
 In Claude Code:
 
 ```
-/plugin marketplace add heidiks/mcp-repo-catalog
-/plugin install mcp-repo-catalog@mcp-repo-catalog
+/plugin marketplace add heidiks/agent-kit
+/plugin install mcp-repo-catalog@agent-kit
 ```
+
+If you installed it earlier as `mcp-repo-catalog@mcp-repo-catalog`, run `/plugin uninstall mcp-repo-catalog@mcp-repo-catalog` and `/plugin marketplace remove mcp-repo-catalog` first.
 
 **Step 3. Set the credentials in your shell** (the plugin's `.mcp.json` reads them from environment variables):
 
